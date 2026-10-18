@@ -46,10 +46,14 @@ async def rate_limit_middleware(request: Request, call_next):
         oldest = rate_limits[client_id][0]
         retry_after = max(1, math.ceil(WINDOW_SECS - (now - oldest)))
         
+        # We must manually inject the CORS header here so the browser doesn't block the 429 error!
         return Response(
             content='{"error": "Too Many Requests"}',
             status_code=429,
-            headers={"Retry-After": str(retry_after)}
+            headers={
+                "Retry-After": str(retry_after),
+                "Access-Control-Allow-Origin": "*"
+            }
         )
         
     rate_limits[client_id].append(now)
